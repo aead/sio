@@ -115,6 +115,22 @@ type Config struct {
 	PayloadSize int
 }
 
+// Overhead returns the number of bytes added to
+// a stream of a given size by DARE 2.0.
+//
+// The length of an encrypted stream is: size + Overhead(size)
+// Overhead panics if the size is larger than 2^48.
+func Overhead(size uint64) uint64 {
+	if size > 1<<48 {
+		panic("sio: size too large for DARE")
+	}
+	overhead := (size / maxPayloadSize) * (headerSize + tagSize)
+	if (size % maxPayloadSize) > 0 {
+		overhead += (headerSize + tagSize)
+	}
+	return overhead
+}
+
 // Encrypt reads from src until it encounters an io.EOF and encrypts all received
 // data. The encrypted data is written to dst. It returns the number of bytes
 // encrypted and the first error encountered while encrypting, if any.

@@ -448,6 +448,25 @@ func TestLargeStream(t *testing.T) {
 	}
 }
 
+var overheadTests = []struct {
+	size, overhead uint64
+}{
+	{size: 0, overhead: 0},                      // 0
+	{size: 1, overhead: 32},                     // 1
+	{size: maxPayloadSize + 1, overhead: 64},    // 2
+	{size: 2 * maxPayloadSize, overhead: 64},    // 3
+	{size: 2*maxPayloadSize + 17, overhead: 96}, // 4
+	{size: 1 << 48, overhead: 32 * (1 << 32)},   // 5
+}
+
+func TestOverhead(t *testing.T) {
+	for i, test := range overheadTests {
+		if overhead := Overhead(test.size); overhead != test.overhead {
+			t.Errorf("Test %d: got: %d want: %d", i, overhead, test.overhead)
+		}
+	}
+}
+
 // Benchmarks
 
 func BenchmarkEncryptReader_8KB(b *testing.B)   { benchmarkEncryptRead(1024, b) }
