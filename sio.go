@@ -22,6 +22,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"io"
+	"io/ioutil"
 
 	"github.com/minio/sio/internal/cpu"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -140,6 +141,15 @@ func Decrypt(dst io.Writer, src io.Reader, config Config) (n int64, err error) {
 		return 0, err
 	}
 	return io.CopyBuffer(dst, decReader, make([]byte, maxPayloadSize))
+}
+
+// Verify reads from src until it encounters an io.EOF and verifies that
+// all data it reads is encrypted. It returns either an error if the data
+// is not well-formed and authentic or any error encountered during
+// reading from src - if any.
+func Verify(src io.Reader, config Config) error {
+	_, err := Decrypt(ioutil.Discard, src, config)
+	return err
 }
 
 // EncryptReader wraps the given src and returns an io.Reader which encrypts
